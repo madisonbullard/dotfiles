@@ -1,2 +1,4 @@
 macos
 .gitignore
+.git
+.gitmodules
