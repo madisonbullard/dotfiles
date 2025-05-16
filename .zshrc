@@ -2,27 +2,32 @@ export PATH=$HOME/bin/.local/scripts:$PATH
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_CUSTOM=$HOME/.config/zsh/custom
-# Which plugins would you like to load?
-# Standard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=(
-  nvm
-  vi-mode
-  aws
-  git
-  zsh-syntax-highlighting
-  zsh-autosuggestions
-)
 
 if [[ -n $SSH_CONNECTION ]]; then
   export EDITOR='vim'
 else
-  export EDITOR='nvim'
+  export EDITOR='hx'
 fi
 
-source $ZSH/oh-my-zsh.sh
+source /opt/homebrew/opt/antidote/share/antidote/antidote.zsh
+
+# Set the root name of the plugins files (.txt and .zsh) antidote will use.
+zsh_plugins=${ZDOTDIR:-~}/.zsh_plugins
+
+# Ensure the .zsh_plugins.txt file exists so you can add plugins.
+[[ -f ${zsh_plugins}.txt ]] || touch ${zsh_plugins}.txt
+
+# Lazy-load antidote from its functions directory.
+fpath=(/opt/homebrew/opt/antidote/share/antidote:/functions $fpath)
+autoload -Uz antidote
+
+# Generate a new static file whenever .zsh_plugins.txt is updated.
+if [[ ! ${zsh_plugins}.zsh -nt ${zsh_plugins}.txt ]]; then
+  antidote bundle <${zsh_plugins}.txt >|${zsh_plugins}.zsh
+fi
+
+# Source your static plugins file.
+source ${zsh_plugins}.zsh
 
 alias zshrc="windsurf ~/.zshrc"
 alias p="pnpm"
@@ -37,6 +42,23 @@ alias bi="bun install"
 alias buw="bunx npm-check-updates -ws --root --format group -i"
 
 alias nvim="$HOME/bin/nvim-macos-arm64/bin/nvim"
+alias zellij="$HOME/bin/zellij"
+alias z=zellij
+
+export LAST_SESSION=$(zellij ls -n -s | tail -n 1)
+export ZELLIJ_AUTO_ATTACH=true
+
+if [[ -z "$ZELLIJ" ]]; then
+    if [[ "$ZELLIJ_AUTO_ATTACH" == "true" ]]; then
+        zellij attach -c $LAST_SESSION
+    else
+        zellij
+    fi
+
+    if [[ "$ZELLIJ_AUTO_EXIT" == "true" ]]; then
+        exit
+    fi
+fi
 
 alias cd.="cd .."
 
@@ -112,32 +134,35 @@ git_info() {
 
 # Use ❯ as the non-root prompt character; # for root
 # Change the prompt character color if the last command had a nonzero exit code
+
 PS1="
-\$(ssh_info)%{$fg[magenta]%}%~%u \$(git_info)
+\$(ssh_info)%{$fg[magenta]%}%~%u \$(git_info) 
 %(?.%{$fg[blue]%}.%{$fg[red]%})%(!.#.❯)%{$reset_color%} "
 
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# export NVM_DIR="$HOME/.nvm"
+# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+# [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+eval "$(fnm env --use-on-cd --shell zsh)"
 
 PATH=~/.console-ninja/.bin:$PATH
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/opt/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/opt/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "/opt/miniconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="/opt/miniconda3/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
+# # >>> conda initialize >>>
+# # !! Contents within this block are managed by 'conda init' !!
+# __conda_setup="$('/opt/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+# if [ $? -eq 0 ]; then
+#     eval "$__conda_setup"
+# else
+#     if [ -f "/opt/miniconda3/etc/profile.d/conda.sh" ]; then
+#         . "/opt/miniconda3/etc/profile.d/conda.sh"
+#     else
+#         export PATH="/opt/miniconda3/bin:$PATH"
+#     fi
+# fi
+# unset __conda_setup
+# # <<< conda initialize <<<
 
 
 # sst
@@ -150,87 +175,6 @@ export PATH=/Users/madisonbullard/.sst/bin:$PATH
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-# -----------------------------------------------------------------------------
-# AI-powered Git Commit Function
-# Copy paste this gist into your ~/.bashrc or ~/.zshrc to gain the `gcm` command. It:
-# 1) gets the current staged changed diff
-# 2) sends them to an LLM to write the git commit message
-# 3) allows you to easily accept, edit, regenerate, cancel
-# But - just read and edit the code however you like
-# the `llm` CLI util is awesome, can get it here: https://llm.datasette.io/en/stable/
-
-function aic {
-    # Function to generate commit message
-    function generate_commit_message {
-        git diff --cached | llm "
-Below is a diff of all staged changes, coming from the command:
-\`\`\`
-git diff --cached
-\`\`\`
-Write concise, informative commit messages: 
-Start with a summary in imperative mood. Explain the 'why' behind changes. 
-Keep the summary under 100 characters. If the changes are lengthy and warrant further explanation, use bullet points for multiple changes, but try to avoid that if possible. 
-Avoid using the word 'refactor'. Instead, explain what was done and reference related issues or tickets. 
-What you write will be passed to git commit -m.
-"
-    }
-
-    # Function to read user input compatibly with both Bash and Zsh
-    function read_input {
-        if [ -n "$ZSH_VERSION" ]; then
-            echo -n "$1"
-            read -r REPLY
-        else
-            read -p "$1" -r REPLY
-        fi
-    }
-
-    # Main script
-    echo "Generating AI-powered commit message..."
-    commit_message=$(generate_commit_message)
-
-    while true; do
-        echo -e "\nProposed commit message:"
-        echo "$commit_message"
-
-        read_input "Do you want to (a)ccept, (e)dit, (r)egenerate, or (c)ancel? "
-        choice=$REPLY
-
-        case "$choice" in
-            a|A )
-                if git commit -m "$commit_message"; then
-                    echo "Changes committed successfully!"
-                    return 0
-                else
-                    echo "Commit failed. Please check your changes and try again."
-                    return 1
-                fi
-                ;;
-            e|E )
-                read_input "Enter your commit message: "
-                commit_message=$REPLY
-                if [ -n "$commit_message" ] && git commit -m "$commit_message"; then
-                    echo "Changes committed successfully with your message!"
-                    return 0
-                else
-                    echo "Commit failed. Please check your message and try again."
-                    return 1
-                fi
-                ;;
-            r|R )
-                echo "Regenerating commit message..."
-                commit_message=$(generate_commit_message)
-                ;;
-            c|C )
-                echo "Commit cancelled."
-                return 1
-                ;;
-            * )
-                echo "Invalid choice. Please try again."
-                ;;
-        esac
-    done
-}
-
 # Added by Windsurf
 export PATH="/Users/madisonbullard/.codeium/windsurf/bin:$PATH"
+export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
