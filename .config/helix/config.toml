@@ -3,6 +3,11 @@ theme = "catppuccin_mocha"
 [editor]
 line-number = "relative"
 mouse = false
+bufferline = "always"
+auto-completion = true
+gutters = ["diagnostics", "spacer", "diff"]
+end-of-line-diagnostics = "hint"
+shell = ['sh', '-c']
 
 [editor.cursor-shape]
 insert = "bar"
@@ -11,7 +16,44 @@ select = "underline"
 
 [editor.file-picker]
 hidden = false
+deduplicate-links = true
+follow-symlinks = true
+git-exclude = true
+git-global = true
+git-ignore = true
+ignore = true
+parents = true
+
+[editor.indent-guides]
+character = "┊"
+skip-levels = 1
 
 [editor.inline-diagnostics]
 cursor-line = "hint"
-max-wrap = 40
+
+[editor.soft-wrap]
+enable = true
+
+[editor.lsp]
+auto-signature-help = true
+display-inlay-hints = false
+display-messages = false
+display-signature-help-docs = true
+enable = true
+goto-reference-include-declaration = true
+snippets = true
+
+[editor.smart-tab]
+enable = true
+supersede-menu = false
+
+[keys.normal.C-y]
+# Open the file(s) in the current window
+y = ":sh zellij run -n Yazi -c -f -x 10% -y 10% --width 80% --height 80% -- bash ~/.config/helix/yazi-picker.sh open"
+# Open the file(s) in a vertical split
+v = ":sh zellij run -n Yazi -c -f -x 10% -y 10% --width 80% --height 80% -- bash ~/.config/helix/yazi-picker.sh vsplit"
+# Open the file(s) in a horizontal split
+h = ":sh zellij run -n Yazi -c -f -x 10% -y 10% --width 80% --height 80% -- bash ~/.config/helix/yazi-picker.sh hsplit"
+
+[keys.normal.C-m]
+k = ":sh echo \"hi\""

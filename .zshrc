@@ -29,7 +29,7 @@ fi
 # Source your static plugins file.
 source ${zsh_plugins}.zsh
 
-alias zshrc="windsurf ~/.zshrc"
+alias zshrc="$EDITOR ~/.zshrc"
 alias p="pnpm"
 alias pu="p up --interactive --latest"
 alias pi="p i"
@@ -42,23 +42,22 @@ alias bi="bun install"
 alias buw="bunx npm-check-updates -ws --root --format group -i"
 
 alias nvim="$HOME/bin/nvim-macos-arm64/bin/nvim"
-alias zellij="$HOME/bin/zellij"
 alias z=zellij
 
 export LAST_SESSION=$(zellij ls -n -s | tail -n 1)
 export ZELLIJ_AUTO_ATTACH=true
 
-if [[ -z "$ZELLIJ" ]]; then
-    if [[ "$ZELLIJ_AUTO_ATTACH" == "true" ]]; then
-        zellij attach -c $LAST_SESSION
-    else
-        zellij
-    fi
+# if [[ -z "$ZELLIJ" ]]; then
+#     if [[ "$ZELLIJ_AUTO_ATTACH" == "true" ]]; then
+#         zellij attach -c $LAST_SESSION
+#     else
+#         zellij
+#     fi
 
-    if [[ "$ZELLIJ_AUTO_EXIT" == "true" ]]; then
-        exit
-    fi
-fi
+#     if [[ "$ZELLIJ_AUTO_EXIT" == "true" ]]; then
+#         exit
+#     fi
+# fi
 
 alias cd.="cd .."
 

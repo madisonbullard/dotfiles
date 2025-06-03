@@ -1,27 +1,19 @@
 layout {
-    tab name="TERM" {
-        pane size=1 borderless=true {
-            plugin location="zellij:tab-bar"
-        }
-        pane split_direction="vertical" {
-            pane
-        }
+    new_tab_template {
+        pane focus=true
         pane size=1 borderless=true {
             plugin location="zellij:status-bar"
         }
     }
-    tab name="EDITOR"{
-        pane size=1 borderless=true {
-            plugin location="zellij:tab-bar"
-        }
+    tab name="EDITOR" hide_floating_panes=true {
         pane split_direction="vertical" {
-            pane borderless=true command="hx"
-            pane size="15%" {
-                plugin location="zellij:strider"
-            }
+            pane focus=true borderless=true command="hx"
         }
         pane size=1 borderless=true {
             plugin location="zellij:status-bar"
+        }
+        floating_panes {
+            pane
         }
     }
 }
